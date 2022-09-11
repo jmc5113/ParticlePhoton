@@ -1,11 +1,11 @@
-#include "ColorLED.h"
+#include "LedColor.h"
 
 #include <stdint.h>
 #include <neopixel.h>
 
 static Adafruit_NeoPixel LedStrip1(1, D1, WS2812B);
 
-uint32_t ColorLED::UpdateLed()
+uint32_t LedColor::UpdateLed()
 {
     if(mChangeTime == 0)
     {
@@ -43,7 +43,7 @@ uint32_t ColorLED::UpdateLed()
     return mCurrentColor;
 }
 
-void ColorLED::ChangeLed(uint32_t changeTime, uint8_t targetR, uint32_t targetG, uint32_t targetB)
+void LedColor::ChangeLed(uint32_t changeTime, uint8_t targetR, uint32_t targetG, uint32_t targetB)
 {
     mChangeTime = changeTime;
     mTargetRed = targetR;
@@ -53,7 +53,7 @@ void ColorLED::ChangeLed(uint32_t changeTime, uint8_t targetR, uint32_t targetG,
     mChangeStartTime = millis();
 }
 
-void ColorLED::TurnOff()
+void LedColor::TurnOff()
 {
     mCurrentColor = 0;
 }

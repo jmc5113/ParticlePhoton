@@ -19,7 +19,8 @@ static void TouchTimeoutExp()
 }
 
 TouchButton::TouchButton(int sensorPin) :
-    mTouchHoldTimer(300, TouchHoldTimerExp), mTouchTimeoutTimer(500, TouchTimeoutExp)
+    mTouchHoldTimer(300, TouchHoldTimerExp), 
+    mTouchTimeoutTimer(500, TouchTimeoutExp)
 {
     mTouchPin = sensorPin;
     mTouchHold = false;
@@ -33,31 +34,34 @@ void TouchButton::Initialize()
     pinMode(mTouchPin, INPUT);
 
     attachInterrupt(mTouchPin, TouchSensorPinInterrupt, CHANGE);
-    // mTouchHoldTimer = Timer(300, &TouchButton::TouchHoldTimeout, this)
-    // mTouchTimeoutTimer = Timer(500, &TouchButton::TouchTimeout, this)
 
     mTouchHoldTimer.start();
     mTouchTimeoutTimer.start();
 }
 
-void TouchButton::RegisterSingleTapHandler(TouchButtonHandler singleTapHandler)
+void TouchButton::RegisterSingleTapHandler(TouchButtonHandler handler)
 {
-    mSingleTapHandler = singleTapHandler;
+    mSingleTapHandler = handler;
 }
 
-void TouchButton::RegisterDoubleTapHandler(TouchButtonHandler doubleTapHandler)
+void TouchButton::RegisterDoubleTapHandler(TouchButtonHandler handler)
 {
-    mDoubleTapHandler = doubleTapHandler;
+    mDoubleTapHandler = handler;
 }
 
-void TouchButton::RegisterHoldHandler(TouchButtonHandler holdHandler)
+void TouchButton::RegisterHoldHandler(TouchButtonHandler handler)
 {
-    mHoldHandler = holdHandler;
+    mHoldHandler = handler;
 }
 
-void TouchButton::RegisterTapAndHoldHandler(TouchButtonHandler tapAndHoldHandler)
+void TouchButton::RegisterTapAndHoldHandler(TouchButtonHandler handler)
 {
-    mTapAndHoldHandler = tapAndHoldHandler;
+    mTapAndHoldHandler = handler;
+}
+
+void TouchButton::RegisterTripleTapHandler(TouchButtonHandler handler)
+{
+    mTripleTapHandler = handler;
 }
 
 
@@ -69,29 +73,23 @@ void TouchButton::TouchHoldTimeout()
     {
         // Tap and hold
         mTapAndHoldHandler();
-        // increaseBrightness();
     }
     else
     {
         // Hold
         mHoldHandler();
-        // decreaseBrightness();
     }
 }
 
 void TouchButton::TouchTimeout()
 {
-    // single tap
     if(mTouchTap)
     {
-
         mSingleTapHandler();
-        // toggleHighPowerLed();
     }
     else if(mTouchDoubleTap)
     {
         mDoubleTapHandler();
-        // toggleLightShow();
     }
 
     mTouchHold = false;

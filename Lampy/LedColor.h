@@ -1,6 +1,8 @@
+#pragma once
+
 #include "application.h"
 
-class ColorLED
+class LedColor
 {
     uint32_t mCurrentColor;
     uint8_t mTargetRed;

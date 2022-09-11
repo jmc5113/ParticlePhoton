@@ -1,12 +1,10 @@
 ////////////////////////////////////
 // Color Wave Asymetric Pattern
 ////////////////////////////////////
+#include "ColorWaveAsymetricPattern.h"
 
-#include "ColorLED.h"
+using namespace std;
 
-static int s_numLeds;
-static ColorLED* s_ledStrip1;
-static ColorLED* s_ledStrip2;
 
 #define NUM_COLORSA 3
 uint8_t waveColorsLeft[NUM_COLORSA][3] = 
@@ -26,36 +24,44 @@ uint8_t waveColorsRight[NUM_COLORSA][3] =
 };
 
 
-static int ledRunDelayTimeA = 125;
-static int colorCounterA = 0;
-static uint32_t iterationCounterA = 0;
-void colorWaveAsymetric()
+ColorWaveAsymetricPattern::ColorWaveAsymetricPattern(int numLeds) : 
+    LedPattern(125, &ColorWaveAsymetricPattern::UpdateLeds, *this),
+    mNumLeds(numLeds),
+    mLedStrip1(vector<LedColor>(numLeds)),
+    mLedStrip2(vector<LedColor>(numLeds))
+{}
+
+uint32_t ColorWaveAsymetricPattern::GetLedColor_Strip1(unsigned int led)
 {
-    int n = iterationCounterA % s_numLeds;
+    if(led < mLedStrip1.size())
+        return mLedStrip1[led].UpdateLed();
+    else
+        return 0;
+}
+
+uint32_t ColorWaveAsymetricPattern::GetLedColor_Strip2(unsigned int led)
+{
+    if(led < mLedStrip2.size())
+        return mLedStrip2[led].UpdateLed();
+    else
+        return 0;
+}
+
+void ColorWaveAsymetricPattern::UpdateLeds()
+{
+    int n = mIterationCounter % mNumLeds;
     if(n == 0)
     {
-        colorCounterA++;
-        if(colorCounterA == NUM_COLORSA)
+        mColorCounter++;
+        if(mColorCounter == NUM_COLORSA)
         {
-            colorCounterA = 0;
+            mColorCounter = 0;
         }
     }
 
-    int ledChangetime = ledRunDelayTimeA * 2;
-    s_ledStrip1[n].ChangeLed(ledChangetime, waveColorsLeft[colorCounterA][0], waveColorsLeft[colorCounterA][1], waveColorsLeft[colorCounterA][2]);
-    s_ledStrip2[n].ChangeLed(ledChangetime, waveColorsRight[colorCounterA][0], waveColorsRight[colorCounterA][1], waveColorsRight[colorCounterA][2]);
+    int ledChangetime = mUpdateDelay * 2;
+    mLedStrip1[n].ChangeLed(ledChangetime, waveColorsLeft[mColorCounter][0], waveColorsLeft[mColorCounter][1], waveColorsLeft[mColorCounter][2]);
+    mLedStrip2[n].ChangeLed(ledChangetime, waveColorsRight[mColorCounter][0], waveColorsRight[mColorCounter][1], waveColorsRight[mColorCounter][2]);
 
-    iterationCounterA++;
-}
-Timer colorWaveTimerAsym(ledRunDelayTimeA, colorWaveAsymetric);
-
-void initializeColorWaveAsymetric(int numLeds, ColorLED* ledStrip1, ColorLED* ledStrip2)
-{
-    s_numLeds = numLeds;
-    s_ledStrip1 = ledStrip1;
-    s_ledStrip2 = ledStrip2;
-    ledRunDelayTimeA = 125;
-    colorCounterA = 0;
-    iterationCounterA = 0;
-    colorWaveTimerAsym.start();
+    mIterationCounter++;
 }

@@ -1,9 +1,10 @@
 // This #include statement was automatically added by the Particle IDE.
 #include <neopixel.h>
-#include "ColorLED.h"
+#include "LedColor.h"
 #include "HighPowerLed.h"
 #include "TouchButton.h"
 #include <vector>
+#include <memory>
 
 // Patterns
 #include "ColorWaveAsymetricPattern.h"
@@ -26,28 +27,14 @@ HighPowerLed highPowerLed = HighPowerLed(highPowerLedEnPin);
 int touchSensorPin = D4;
 TouchButton touchButton = TouchButton(touchSensorPin);
 
-// int decreaseBrightnessPin = D5;
-// int increaseBrightnessPin = D6;
+std::vector<std::shared_ptr<LedPattern>> ledPatterns = {
+    std::make_shared<ColorChasePattern>(NUM_LEDS),
+    std::make_shared<ColorWaveSymetricPattern>(NUM_LEDS),
+    std::make_shared<ColorWaveAsymetricPattern>(NUM_LEDS),
+    std::make_shared<LedStackPattern>(NUM_LEDS)
+};
 
-std::vector<ColorLED> g_ColorLEDs1(NUM_LEDS);
-std::vector<ColorLED> g_ColorLEDs2(NUM_LEDS);
-
-//////////
-// colors
-/////////
-    // {0xFF, 0x00, 0x00}, // Red
-    // {0xFF, 0x5F, 0x00}, // Red-Orange
-    // {0xFF, 0x7F, 0x00}, // Orange
-    // {0xFF, 0xFF, 0x00}, // Yellow
-    // {0x00, 0xFF, 0x00}, // Green
-    // {0x00, 0x3F, 0xFF}, // Light Blue
-    // {0x00, 0xFF, 0xFF}, // Medium Blue
-    // {0x00, 0x00, 0xFF}, // Blue
-    // {0xFF, 0x00, 0xFF}, // Purple
-    // {0xFF, 0x50, 0x7F}, // Light Pink
-    // {0xFF, 0x00, 0x7F}, // Pink
-    // {0xFF, 0xFF, 0xFF}, // White
-    // {0x00, 0x00, 0x00}, // Dark
+int currentLedPattern = 3;
 
 // Static handler functions 
 void decreaseBrightness()
@@ -70,8 +57,8 @@ void updateLeds()
 {
     for(int i = 0; i < NUM_LEDS; i++)
     {
-        LedStrip1.setPixelColor(i, g_ColorLEDs1[i].UpdateLed());
-        LedStrip2.setPixelColor(i, g_ColorLEDs2[i].UpdateLed());
+        LedStrip1.setPixelColor(i, ledPatterns[currentLedPattern]->GetLedColor_Strip1(i));
+        LedStrip2.setPixelColor(i, ledPatterns[currentLedPattern]->GetLedColor_Strip2(i));
     }
 
     LedStrip1.show();
@@ -85,8 +72,9 @@ Timer ledUpdateTimer(20, updateLeds);
 
 void turnOffLightShow()
 {
-    // g_Timer.stopFromISR();
     ledUpdateTimer.stopFromISR();
+
+    ledPatterns[currentLedPattern]->StopFromISR();
 
     LedStrip1.clear();
     LedStrip2.clear();
@@ -97,7 +85,7 @@ void turnOffLightShow()
 
 void turnOnLightShow()
 {
-    // g_Timer.startFromISR();
+    ledPatterns[currentLedPattern]->StartFromISR();
     ledUpdateTimer.startFromISR();
 }
 
@@ -129,11 +117,12 @@ void setup() {
     LedStrip1.begin();
     LedStrip2.begin();
 
-    initializeColorChase(g_ColorLEDs1, g_ColorLEDs2);
-    // initializeLedStack(NUM_LEDS, g_ColorLEDs1, g_ColorLEDs2);
-    // initializeColorWaveSymetric(NUM_LEDS, g_ColorLEDs1, g_ColorLEDs2);
-    // initializeColorWaveAsymetric(NUM_LEDS, g_ColorLEDs1, g_ColorLEDs2);
+    // initializeColorChase(g_LedColors1, g_LedColors2);
+    // initializeLedStack(NUM_LEDS, g_LedColors1, g_LedColors2);
+    // initializeColorWaveSymetric(NUM_LEDS, g_LedColors1, g_LedColors2);
+    // initializeColorWaveAsymetric(NUM_LEDS, g_LedColors1, g_LedColors2);
 
+    ledPatterns[currentLedPattern]->Start();
     ledUpdateTimer.start();
 }
 

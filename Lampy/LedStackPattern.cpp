@@ -1,39 +1,79 @@
 //
 // led stack pattern
 //
-#include "ColorLED.h"
+#include "LedStackPattern.h"
 #include "ColorHelper.h"
 
-static int s_numLeds;
-static ColorLED* s_ledStrip1;
-static ColorLED* s_ledStrip2;
-
 static int s_ledStackChangeTime = 250;
-static int s_stackCount = 0;
-static int s_leadingPos = s_numLeds - 1;
-static int s_trailingPos = s_numLeds - 1;
-static int s_resetPos = s_numLeds - 1;
+// static int mStackCount = 0;
+// static int mLeadingPos = mNumLeds - 1;
+// static int mTrailingPos = mNumLeds - 1;
+// static int mResetPos = mNumLeds - 1;
 static uint8_t s_ledStackBaseColor[3] = {0x00, 0x00, 0x00};
 static uint8_t s_ledStackColor[3] = {0x00, 0xFF, 0x00};
 
 static bool s_randomizeStackColor = false;
 static bool s_randomizeRunColor = false;
 
-// There may be an issue with the LED pointers as one led from the s_ledstrip1 is lit green, while s_ledstrip2 works normal.
+// There may be an issue with the LED pointers as one led from the mLedStrip1 is lit green, while mLedStrip2 works normal.
 
-void ledStack()
+using namespace std;
+
+#define NUM_COLORS 10
+static uint8_t s_waveColors[NUM_COLORS][3] = 
 {
-    if(s_leadingPos == s_stackCount)
+    {0xFF, 0x00, 0x00}, // Red
+    {0xFF, 0x7F, 0x00}, // Orange
+    {0xFF, 0xFF, 0x00}, // Yellow
+    {0x00, 0xFF, 0x00}, // Green
+    {0x00, 0xFF, 0xFF}, // Light Blue
+    {0x00, 0x00, 0xFF}, // Blue
+    {0xFF, 0x00, 0xFF}, // Purple
+    {0xFF, 0x00, 0x7F}, // Pink
+    {0xFF, 0xFF, 0xFF}, // White
+    {0x00, 0x00, 0x00}  // Dark
+};
+
+LedStackPattern::LedStackPattern(int numLeds) :
+    mStackCount(0),
+    mLeadingPos(numLeds - 1),
+    mTrailingPos(numLeds - 1),
+    mResetPos(numLeds - 1),
+    LedPattern(175, &LedStackPattern::UpdateLeds, *this),
+    mNumLeds(numLeds),
+    mLedStrip1(vector<LedColor>(numLeds)),
+    mLedStrip2(vector<LedColor>(numLeds))
+{}
+
+uint32_t LedStackPattern::GetLedColor_Strip1(unsigned int led)
+{
+    if(led < mLedStrip1.size())
+        return mLedStrip1[led].UpdateLed();
+    else
+        return 0;
+}
+
+uint32_t LedStackPattern::GetLedColor_Strip2(unsigned int led)
+{
+    if(led < mLedStrip2.size())
+        return mLedStrip2[led].UpdateLed();
+    else
+        return 0;
+}
+
+void LedStackPattern::UpdateLeds()
+{
+    if(mLeadingPos == mStackCount)
     {
         // reset down
-        s_ledStrip1[s_resetPos].ChangeLed(s_ledStackChangeTime, s_ledStackBaseColor[0], s_ledStackBaseColor[1], s_ledStackBaseColor[2]);
-        // s_ledStrip2[s_resetPos].ChangeLed(s_ledStackChangeTime, s_ledStackBaseColor[0], s_ledStackBaseColor[1], s_ledStackBaseColor[2]);
+        mLedStrip1[mResetPos].ChangeLed(s_ledStackChangeTime, s_ledStackBaseColor[0], s_ledStackBaseColor[1], s_ledStackBaseColor[2]);
+        mLedStrip2[mResetPos].ChangeLed(s_ledStackChangeTime, s_ledStackBaseColor[0], s_ledStackBaseColor[1], s_ledStackBaseColor[2]);
 
-        s_resetPos--;
-        if(s_resetPos < 0)
+        mResetPos--;
+        if(mResetPos < 0)
         {
-            s_resetPos = s_numLeds - 1;
-            s_stackCount = 0;
+            mResetPos = mNumLeds - 1;
+            mStackCount = 0;
             if(s_randomizeStackColor) 
             {
                 randomColor(s_ledStackColor);
@@ -42,53 +82,44 @@ void ledStack()
         return;
     }
 
-    if(s_trailingPos - s_leadingPos > 1)
+    if(mTrailingPos - mLeadingPos > 1)
     {
-        // Set led at s_trailingPos back to the base color
-        s_ledStrip1[s_trailingPos].ChangeLed(s_ledStackChangeTime, s_ledStackBaseColor[0], s_ledStackBaseColor[1], s_ledStackBaseColor[2]);
-        // s_ledStrip2[s_trailingPos].ChangeLed(s_ledStackChangeTime, s_ledStackBaseColor[0], s_ledStackBaseColor[1], s_ledStackBaseColor[2]);
-        s_trailingPos --;
+        // Set led at mTrailingPos back to the base color
+        mLedStrip1[mTrailingPos].ChangeLed(s_ledStackChangeTime, s_ledStackBaseColor[0], s_ledStackBaseColor[1], s_ledStackBaseColor[2]);
+        mLedStrip2[mTrailingPos].ChangeLed(s_ledStackChangeTime, s_ledStackBaseColor[0], s_ledStackBaseColor[1], s_ledStackBaseColor[2]);
+        mTrailingPos --;
     }
 
-    s_leadingPos --;
+    mLeadingPos --;
 
     // Set the next led to the stack color
-    s_ledStrip1[s_leadingPos].ChangeLed(s_ledStackChangeTime, s_ledStackColor[0], s_ledStackColor[1], s_ledStackColor[2]);
-    // s_ledStrip2[s_leadingPos].ChangeLed(s_ledStackChangeTime, s_ledStackColor[0], s_ledStackColor[1], s_ledStackColor[2]);
+    mLedStrip1[mLeadingPos].ChangeLed(s_ledStackChangeTime, s_ledStackColor[0], s_ledStackColor[1], s_ledStackColor[2]);
+    mLedStrip2[mLeadingPos].ChangeLed(s_ledStackChangeTime, s_ledStackColor[0], s_ledStackColor[1], s_ledStackColor[2]);
 
-    if(s_leadingPos < 0)
+    if(mLeadingPos < 0)
     {
-        s_leadingPos = s_numLeds - 1;
+        mLeadingPos = mNumLeds - 1;
     }
 
-    if(s_trailingPos < 0)
+    if(mTrailingPos < 0)
     {
-        s_trailingPos = s_numLeds - 1;
+        mTrailingPos = mNumLeds - 1;
     }
 
-    if(s_leadingPos == s_stackCount)
+    if(mLeadingPos == mStackCount)
     {
-        s_leadingPos = s_trailingPos = s_numLeds - 1;
+        mLeadingPos = mTrailingPos = mNumLeds - 1;
         
-        s_stackCount++;
+        mStackCount++;
 
         if(s_randomizeRunColor)
         {
             randomColor(s_ledStackColor);
         }
 
-        if(s_stackCount == s_numLeds)
+        if(mStackCount == mNumLeds)
         {
-            s_stackCount = 0;
+            mStackCount = 0;
         }
     }
-}
-
-Timer ledStackTimer(175, ledStack);
-void initializeLedStack(int numLeds, ColorLED* ledStrip1, ColorLED* ledStrip2)
-{
-    s_numLeds = numLeds;
-    s_ledStrip1 = ledStrip2;
-    s_ledStrip2 = ledStrip2;
-    ledStackTimer.start();
 }

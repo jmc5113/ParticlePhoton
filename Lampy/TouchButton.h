@@ -16,15 +16,17 @@ private:
     TouchButtonHandler mDoubleTapHandler;
     TouchButtonHandler mHoldHandler;
     TouchButtonHandler mTapAndHoldHandler;
-    
+    TouchButtonHandler mTripleTapHandler;
+
 public:
     TouchButton(int sensorPin);
     void Initialize();
 
-    void RegisterSingleTapHandler(TouchButtonHandler singleTapHandler);
-    void RegisterDoubleTapHandler(TouchButtonHandler doubleTapHandler);
-    void RegisterHoldHandler(TouchButtonHandler holdHandler);
-    void RegisterTapAndHoldHandler(TouchButtonHandler tapAndHoldHandler);
+    void RegisterSingleTapHandler(TouchButtonHandler handler);
+    void RegisterDoubleTapHandler(TouchButtonHandler handler);
+    void RegisterHoldHandler(TouchButtonHandler handler);
+    void RegisterTapAndHoldHandler(TouchButtonHandler handler);
+    void RegisterTripleTapHandler(TouchButtonHandler handler);
 
     void TouchHoldTimeout();
     void TouchTimeout();

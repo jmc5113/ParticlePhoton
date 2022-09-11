@@ -2,109 +2,75 @@
 // Color Chase Pattern
 ////////////////////////////////////
 
-#include "ColorLED.h"
-#include <vector>
+#include "ColorChasePattern.h"
 
 using namespace std;
 
-static int s_numLeds;
-static vector<ColorLED*> &s_ledStrip1;
-static vector<ColorLED*> &s_ledStrip2;
+ColorChasePattern::ColorChasePattern(int numLeds) : 
+    LedPattern(50, &ColorChasePattern::UpdateLeds, *this),
+    mNumLeds(numLeds),
+    mLedStrip1(vector<LedColor>(numLeds)),
+    mLedStrip2(vector<LedColor>(numLeds))
+{}
 
-
-#define COLORS_8 8
-uint8_t redWhite[COLORS_8][3] = 
+uint32_t ColorChasePattern::GetLedColor_Strip1(unsigned int led)
 {
-    {0xFF, 0x00, 0x00}, // Red
-    {0xFF, 0x00, 0x00}, // Red
-    {0xFF, 0x00, 0x00}, // Red
-    {0x7F, 0x00, 0x00}, // Red
-    {0xFF, 0xFF, 0xFF}, // White
-    {0xFF, 0xFF, 0xFF}, // White
-    {0xFF, 0xFF, 0xFF}, // White
-    {0x7F, 0x7F, 0x7F}, // White
-    
-};
+    if(led < mLedStrip1.size())
+        return mLedStrip1[led].UpdateLed();
+    else
+        return 0;
+}
 
-#define COLORS_12 12
-uint8_t redGreenBlueOrange[COLORS_12][3] =
+uint32_t ColorChasePattern::GetLedColor_Strip2(unsigned int led)
 {
-    {0xFF, 0x00, 0x00}, // Red
-    {0xFF, 0x00, 0x00}, // Red
-    {0xFF, 0x00, 0x00}, // Red
-    {0x00, 0xFF, 0x00}, // Green
-    {0x00, 0xFF, 0x00}, // Green
-    {0x00, 0xFF, 0x00}, // Green
-    {0xFF, 0x7F, 0x00}, // Orange
-    {0xFF, 0x7F, 0x00}, // Orange
-    {0xFF, 0x7F, 0x00}, // Orange
-    {0x00, 0x00, 0xFF}, // Blue
-    {0x00, 0x00, 0xFF}, // Blue
-    {0x00, 0x00, 0xFF}, // Blue
-};
+    if(led < mLedStrip2.size())
+        return mLedStrip2[led].UpdateLed();
+    else
+        return 0;
+}
 
-int colorChaseSpeedUpdateDelta = 10;
-int colorChaseRunDelay = 50;
-int speedChangeTime = 0;
-bool forward = true;
-uint8_t (*colors)[3] = redWhite; 
-int numColors = COLORS_8;
-uint32_t iterationCounter = 0;
-
-
-void colorChase();
-
-Timer colorChaseTimer(colorChaseRunDelay, colorChase);
-void colorChase()
+// Timer colorChaseTimer(mUpdateDelay, ColorChasePattern::UpdateLeds);
+void ColorChasePattern::UpdateLeds()
 {
     int currentTime = millis();
-    if(currentTime - speedChangeTime > 500)
+    if(currentTime - mSpeedChangeTime > 500)
     {
-        speedChangeTime = currentTime;
-        if(colorChaseRunDelay <= 50)
+        mSpeedChangeTime = currentTime;
+        if(mUpdateDelay <= 50)
         {
-            colorChaseSpeedUpdateDelta = 10;
+            mUpdateDelta = 10;
 
         }
-        else if(colorChaseRunDelay >= 500)
+        else if(mUpdateDelay >= 500)
         {
-            colorChaseSpeedUpdateDelta = -10;
-            forward = !forward;
+            mUpdateDelta = -10;
+            mForward = !mForward;
         }
 
-        colorChaseRunDelay += colorChaseSpeedUpdateDelta;
-        colorChaseTimer.changePeriodFromISR(colorChaseRunDelay);
+        mUpdateDelay += mUpdateDelta;
+        mTimer.changePeriodFromISR(mUpdateDelay);
     }
 
-    int colorCounter = iterationCounter;
-    for(int i = 0; i < s_numLeds; i++)
+    int colorCounter = mIterationCounter;
+    for(int i = 0; i < mNumLeds; i++)
     {
-        int changetime = colorChaseRunDelay - 30;
+        int changetime = mUpdateDelay - 30;
 
-        if(forward)
+        if(mForward)
         {
-            s_ledStrip1[i].ChangeLed(changetime, colors[colorCounter][0], colors[colorCounter][1], colors[colorCounter][2]);
-            s_ledStrip2[15 - i].ChangeLed(changetime, colors[colorCounter][0], colors[colorCounter][1], colors[colorCounter][2]);
+            mLedStrip1[i].ChangeLed(changetime, colors[colorCounter][0], colors[colorCounter][1], colors[colorCounter][2]);
+            mLedStrip2[15 - i].ChangeLed(changetime, colors[colorCounter][0], colors[colorCounter][1], colors[colorCounter][2]);
         }
         else
         {
-            s_ledStrip1[15 - i].ChangeLed(changetime, colors[colorCounter][0], colors[colorCounter][1], colors[colorCounter][2]);
-            s_ledStrip2[i].ChangeLed(changetime, colors[colorCounter][0], colors[colorCounter][1], colors[colorCounter][2]);
+            mLedStrip1[15 - i].ChangeLed(changetime, colors[colorCounter][0], colors[colorCounter][1], colors[colorCounter][2]);
+            mLedStrip2[i].ChangeLed(changetime, colors[colorCounter][0], colors[colorCounter][1], colors[colorCounter][2]);
         }
         
         colorCounter++;
-        colorCounter = colorCounter % numColors;
+        colorCounter = colorCounter % mNumColors;
     }
 
-    iterationCounter++;
-    iterationCounter = iterationCounter % numColors;
-}
-
-void initializeColorChase(std::vector<ColorLED> &ledStrip1, std::vector<ColorLED> &ledStrip2)
-{
-    s_numLeds = s_ledStrip1.size();
-    s_ledStrip1 = ledStrip1;
-    s_ledStrip2 = ledStrip2;
-    colorChaseTimer.start();
-    // colorChaseSpeedTimer.start();
+    mIterationCounter++;
+    mIterationCounter = mIterationCounter % mNumColors;
 }

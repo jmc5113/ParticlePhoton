@@ -1,11 +1,9 @@
 ////////////////////////////////////
 // Color Wave Symetric Pattern
 ////////////////////////////////////
-#include "ColorLED.h"
+#include "ColorWaveSymetricPattern.h"
 
-static int s_numLeds;
-static ColorLED* s_ledStrip1;
-static ColorLED* s_ledStrip2;
+using namespace std;
 
 #define NUM_COLORS 10
 static uint8_t s_waveColors[NUM_COLORS][3] = 
@@ -22,36 +20,44 @@ static uint8_t s_waveColors[NUM_COLORS][3] =
     {0x00, 0x00, 0x00}  // Dark
 };
 
-static int s_ledRunDelayTime = 125;
-static int s_colorCounter = 0;
-static uint32_t s_iterationCounter = 0;
-void colorWaveSymetric()
+ColorWaveSymetricPattern::ColorWaveSymetricPattern(int numLeds) : 
+    LedPattern(125, &ColorWaveSymetricPattern::UpdateLeds, *this),
+    mNumLeds(numLeds),
+    mLedStrip1(vector<LedColor>(numLeds)),
+    mLedStrip2(vector<LedColor>(numLeds))
+{}
+
+uint32_t ColorWaveSymetricPattern::GetLedColor_Strip1(unsigned int led)
 {
-    int n = s_iterationCounter % s_numLeds;
+    if(led < mLedStrip1.size())
+        return mLedStrip1[led].UpdateLed();
+    else
+        return 0;
+}
+
+uint32_t ColorWaveSymetricPattern::GetLedColor_Strip2(unsigned int led)
+{
+    if(led < mLedStrip2.size())
+        return mLedStrip2[led].UpdateLed();
+    else
+        return 0;
+}
+
+void ColorWaveSymetricPattern::UpdateLeds()
+{
+    int n = mIterationCounter % mNumLeds;
     if(n == 0)
     {
-        s_colorCounter++;
-        if(s_colorCounter == NUM_COLORS)
+        mColorCounter++;
+        if(mColorCounter == NUM_COLORS)
         {
-            s_colorCounter = 0;
+            mColorCounter = 0;
         }
     }
 
-    int ledChangetime = s_ledRunDelayTime * 2;
-    s_ledStrip1[n].ChangeLed(ledChangetime, s_waveColors[s_colorCounter][0], s_waveColors[s_colorCounter][1], s_waveColors[s_colorCounter][2]);
-    s_ledStrip2[n].ChangeLed(ledChangetime, s_waveColors[s_colorCounter][0], s_waveColors[s_colorCounter][1], s_waveColors[s_colorCounter][2]);
+    int ledChangetime = mUpdateDelay * 2;
+    mLedStrip1[n].ChangeLed(ledChangetime, s_waveColors[mColorCounter][0], s_waveColors[mColorCounter][1], s_waveColors[mColorCounter][2]);
+    mLedStrip2[n].ChangeLed(ledChangetime, s_waveColors[mColorCounter][0], s_waveColors[mColorCounter][1], s_waveColors[mColorCounter][2]);
 
-    s_iterationCounter++;
-}
-Timer colorWaveTimer(s_ledRunDelayTime, colorWaveSymetric);
-
-void initializeColorWaveSymetric(int numLeds, ColorLED* ledStrip1, ColorLED* ledStrip2)
-{
-    s_numLeds = numLeds;
-    s_ledStrip1 = ledStrip1;
-    s_ledStrip2 = ledStrip2;
-    s_ledRunDelayTime = 125;
-    s_colorCounter = 0;
-    s_iterationCounter = 0;
-    colorWaveTimer.start();
+    mIterationCounter++;
 }
