@@ -1,165 +1,129 @@
 // This #include statement was automatically added by the Particle IDE.
 #include <neopixel.h>
+#include "LedColor.h"
+#include "HighPowerLed.h"
+#include "TouchButton.h"
+#include <vector>
+#include <memory>
 
-// Adafruit_NeoPixel Pixy1(1, D1, WS2811);
+// Patterns
+#include "ColorWaveAsymetricPattern.h"
+#include "ColorWaveSymetricPattern.h"
+#include "ColorChasePattern.h"
+#include "LedStackPattern.h"
 
-int numLeds = 16;
-Adafruit_NeoPixel Pixy1(numLeds, D2, WS2812B);
-Adafruit_NeoPixel Pixy2(numLeds, D3, WS2812B);
+#define NUM_LEDS 16
+
+#define INTERRUPT_RESET_TIME 500 //time in ms for interrupt pins to wait before triggering again.
+
+Adafruit_NeoPixel LedStrip1(NUM_LEDS, D2, WS2812B);
+Adafruit_NeoPixel LedStrip2(NUM_LEDS, D3, WS2812B);
 
 // Output PWM pin for high power led.
 int highPowerLedEnPin = D0;
+HighPowerLed highPowerLed = HighPowerLed(highPowerLedEnPin);
 
-// Interrupt pins
-int toggleLedPin = D4;
-int decreaseBrightnessPin = D5;
-int increaseBrightnessPin = D6;
+// Lamp Controls
+int touchSensorPin = D4;
+TouchButton touchButton = TouchButton(touchSensorPin);
 
+std::vector<std::shared_ptr<LedPattern>> ledPatterns = {
+    std::make_shared<ColorChasePattern>(NUM_LEDS),
+    std::make_shared<ColorWaveSymetricPattern>(NUM_LEDS),
+    std::make_shared<ColorWaveAsymetricPattern>(NUM_LEDS),
+    std::make_shared<LedStackPattern>(NUM_LEDS)
+};
 
-int highPowerLedPwmValue = 245;
-bool highPowerLedEnabled = false;
+int currentLedPattern = 3;
 
-// Used to prevent the interrupts from firing many times in a row.
-unsigned long interruptTime = 0;
-
-void toggleLed()
+// Static handler functions 
+void decreaseBrightness()
 {
-    if(millis() - interruptTime < 500)
-    {
-        return;
-    }
-    interruptTime = millis();
-
-    if(highPowerLedEnabled)
-    {
-        // Turn off led
-        analogWrite(highPowerLedEnPin, 255, 200);
-        highPowerLedEnabled = false;
-    }
-    else
-    {
-        // Set the PWM value back to where it was.
-        analogWrite(highPowerLedEnPin, highPowerLedPwmValue, 200);
-        highPowerLedEnabled = true;
-    }
-
-    //wait(.25);
+    highPowerLed.decreaseBrightness();
 }
 
 void increaseBrightness()
 {
-    if(millis() - interruptTime < 500)
-    {
-        return;
-    }
-    interruptTime = millis();
-
-    if(highPowerLedPwmValue >= 25)
-    {
-        highPowerLedPwmValue -= 25; 
-    }
-    else
-    {
-        highPowerLedPwmValue = 0;  
-    }
-
-    analogWrite(highPowerLedEnPin, highPowerLedPwmValue, 200);
-    //wait(.25); 
+    highPowerLed.increaseBrightness();
 }
 
-void decreaseBrightness()
+void toggleHighPowerLed()
 {
-    if(millis() - interruptTime < 500)
-    {
-        return;
-    } 
-    interruptTime = millis();
-
-    if(highPowerLedPwmValue <= 230)
-    {
-        highPowerLedPwmValue += 25; 
-    }
-    else
-    {
-        highPowerLedPwmValue = 255;    
-    }
-
-    analogWrite(highPowerLedEnPin, highPowerLedPwmValue, 200);
-    //wait(.25);
+    highPowerLed.toggleHighPowerLed();
 }
 
-
-void rainbow()
+// Update the LEDs - executed rapidly for LEDs to make smooth color transitions
+void updateLeds()
 {
-    if(millis() % 250 == 0)
+    for(int i = 0; i < NUM_LEDS; i++)
     {
-        for(int i = 0; i < numLeds; i++)
-        {
-            Pixy1.setPixelColor(i, 0xFF, 0x00, 0x00);
-            Pixy2.setPixelColor(i, 0x00, 0xFF, 0x00);
-        }
-        Pixy1.show();
-        Pixy2.show(); 
+        LedStrip1.setPixelColor(i, ledPatterns[currentLedPattern]->GetLedColor_Strip1(i));
+        LedStrip2.setPixelColor(i, ledPatterns[currentLedPattern]->GetLedColor_Strip2(i));
     }
+
+    LedStrip1.show();
+    LedStrip2.show();
+}
+Timer ledUpdateTimer(20, updateLeds);
+
+//
+// Light show controls
+//
+
+void turnOffLightShow()
+{
+    ledUpdateTimer.stopFromISR();
+
+    ledPatterns[currentLedPattern]->StopFromISR();
+
+    LedStrip1.clear();
+    LedStrip2.clear();
+
+    LedStrip1.show();
+    LedStrip2.show();
 }
 
-#define NUM_COLORS 6
-uint32_t colors[NUM_COLORS] = 
+void turnOnLightShow()
 {
-    Pixy1.Color(0xFF, 0x00, 0x00), // Red
-    Pixy1.Color(0xFF, 0xFF, 0x00), // Yellow
-    Pixy1.Color(0xFF, 0x00, 0xFF), // Purple
-    Pixy1.Color(0x00, 0xFF, 0x00), // Green
-    Pixy1.Color(0xFF, 0xFF, 0xFF), // White
-    Pixy1.Color(0x00, 0x00, 0xFF), // Blue
-};
-
-// uint32_t color = 0;
-int colorCounter = 0;
-int iterationCounter = 0;
-void colorChaseSymmetric()
-{
-        int n = iterationCounter % numLeds;
-        if(n == 0)
-        {
-            colorCounter++;
-            if(colorCounter == 6)
-            {
-                colorCounter = 0;
-            }
-        }
-        // for(int i = 0; i < n; i++)
-        // {
-            Pixy1.setPixelColor(n, colors[colorCounter]);
-            Pixy2.setPixelColor(n, colors[colorCounter]);
-        // }
-        Pixy1.show();
-        Pixy2.show(); 
-
-        iterationCounter++;
+    ledPatterns[currentLedPattern]->StartFromISR();
+    ledUpdateTimer.startFromISR();
 }
 
-
-Timer timer(500, colorChaseSymmetric);
 int startTime = 0;
+bool lightShowEnabled = false;
+void toggleLightShow()
+{
+    if(lightShowEnabled)
+    {
+        lightShowEnabled = false;
+        turnOffLightShow();
+    }
+    else
+    {
+        turnOnLightShow();
+        lightShowEnabled = true;
+    }
+}
 
 void setup() {
+    highPowerLed.Initialize();
 
-    pinMode(highPowerLedEnPin, OUTPUT);
+    touchButton.Initialize();
+    touchButton.RegisterSingleTapHandler(toggleHighPowerLed);
+    touchButton.RegisterDoubleTapHandler(toggleLightShow);
+    touchButton.RegisterHoldHandler(decreaseBrightness);
+    touchButton.RegisterTapAndHoldHandler(increaseBrightness);
 
-    pinMode(toggleLedPin, INPUT_PULLDOWN);
-    pinMode(decreaseBrightnessPin, INPUT_PULLDOWN);
-    pinMode(increaseBrightnessPin, INPUT_PULLDOWN);
+    LedStrip1.begin();
+    LedStrip2.begin();
 
-    attachInterrupt(toggleLedPin, toggleLed, RISING);
-    attachInterrupt(decreaseBrightnessPin, decreaseBrightness, RISING);
-    attachInterrupt(increaseBrightnessPin, increaseBrightness, RISING);
+    // initializeColorChase(g_LedColors1, g_LedColors2);
+    // initializeLedStack(NUM_LEDS, g_LedColors1, g_LedColors2);
+    // initializeColorWaveSymetric(NUM_LEDS, g_LedColors1, g_LedColors2);
+    // initializeColorWaveAsymetric(NUM_LEDS, g_LedColors1, g_LedColors2);
 
-    analogWrite(highPowerLedEnPin, highPowerLedPwmValue, 200);
-
-    Pixy1.begin();
-    Pixy2.begin();
-    timer.start();
+    ledPatterns[currentLedPattern]->Start();
+    ledUpdateTimer.start();
 }
 
 void loop() {
