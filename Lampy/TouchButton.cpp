@@ -5,7 +5,7 @@ static TouchButton* s_touchButton;
 
 static void TouchSensorPinInterrupt()
 {
-    s_touchButton->TouchPinChange();
+    s_touchButton->InterruptTriggered();
 }
 
 static void TouchHoldTimerExp()
@@ -20,12 +20,14 @@ static void TouchTimeoutExp()
 
 TouchButton::TouchButton(int sensorPin) :
     mTouchHoldTimer(300, TouchHoldTimerExp), 
-    mTouchTimeoutTimer(500, TouchTimeoutExp)
+    mTouchTimeoutTimer(500, TouchTimeoutExp),
+    mTouchHold(false),
+    mNumTaps(0),
+    // mTouchTap(false),
+    // mTouchDoubleTap(false),
+    mInterruptTriggered(false)
 {
     mTouchPin = sensorPin;
-    mTouchHold = false;
-    mTouchTap = false;
-    mTouchDoubleTap = false;
 }
 
 void TouchButton::Initialize()
@@ -37,6 +39,20 @@ void TouchButton::Initialize()
 
     mTouchHoldTimer.start();
     mTouchTimeoutTimer.start();
+}
+
+void TouchButton::InterruptTriggered()
+{
+    mInterruptTriggered = true;
+}
+
+void TouchButton::Update()
+{
+    if(mInterruptTriggered)
+    {
+        mInterruptTriggered = false;
+        s_touchButton->TouchPinChange();
+    }
 }
 
 void TouchButton::RegisterSingleTapHandler(TouchButtonHandler handler)
@@ -69,7 +85,7 @@ void TouchButton::TouchHoldTimeout()
 {
     mTouchHold = true;
 
-    if(mTouchTap)
+    if(mNumTaps == 1)
     {
         // Tap and hold
         mTapAndHoldHandler();
@@ -83,56 +99,68 @@ void TouchButton::TouchHoldTimeout()
 
 void TouchButton::TouchTimeout()
 {
-    if(mTouchTap)
+    if(mNumTaps == 1)
     {
         mSingleTapHandler();
     }
-    else if(mTouchDoubleTap)
+    else if(mNumTaps == 2)
     {
         mDoubleTapHandler();
     }
+    else if(mNumTaps == 3)
+    {
+        mTripleTapHandler();
+    }
 
     mTouchHold = false;
-    mTouchTap = false;
-    mTouchDoubleTap = false;
+    mNumTaps = 0;
+    // mTouchTap = false;
+    // mTouchDoubleTap = false;
 }
 
 void TouchButton::TouchPinChange()
 {
     int value = digitalRead(mTouchPin);
+    delay(50);
+    int value2 = digitalRead(mTouchPin);
+
+    // if interrupt pulse is too short, do nothing.
+    if(value != value2)
+        return;
 
     // Touch Active, else touch released
     if(value == HIGH)
     {
         // stop the timeout timer.
-        mTouchTimeoutTimer.stopFromISR();
+        mTouchTimeoutTimer.stop();
 
         //start a timer to see if this is a tap or hold
-        mTouchHoldTimer.resetFromISR();
+        mTouchHoldTimer.reset();
     }
     else
     {
         // Touch button released
-        mTouchHoldTimer.stopFromISR();
+        mTouchHoldTimer.stop();
 
         if(mTouchHold)
         {
             mTouchHold = false;
-            mTouchTap = false;
-            mTouchDoubleTap = false;
+            mNumTaps = 0;
+            // mTouchTap = false;
+            // mTouchDoubleTap = false;
         }
-        else if(mTouchTap)
-        {
-            // this is a double tap. Toggle the light show.
-            mTouchTap = false;
-            mTouchDoubleTap = true;
-            mTouchTimeoutTimer.resetFromISR();
-        } 
+        // else if(mTouchTap)
+        // {
+        //     // this is a double tap. Toggle the light show.
+        //     mTouchTap = false;
+        //     mTouchDoubleTap = true;
+        //     mTouchTimeoutTimer.reset();
+        // } 
         else
         {
             // this is a single tap, start the mTouchTimeoutTimer to see if another touch is coming.
-            mTouchTap = true;
-            mTouchTimeoutTimer.resetFromISR();
+            mNumTaps++;
+            mTouchTimeoutTimer.reset();
         }
 
     } 

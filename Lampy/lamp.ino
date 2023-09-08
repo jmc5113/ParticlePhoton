@@ -11,6 +11,7 @@
 #include "ColorWaveSymetricPattern.h"
 #include "ColorChasePattern.h"
 #include "LedStackPattern.h"
+#include "ColorBloomPattern.h"
 
 #define NUM_LEDS 16
 
@@ -31,10 +32,11 @@ std::vector<std::shared_ptr<LedPattern>> ledPatterns = {
     std::make_shared<ColorChasePattern>(NUM_LEDS),
     std::make_shared<ColorWaveSymetricPattern>(NUM_LEDS),
     std::make_shared<ColorWaveAsymetricPattern>(NUM_LEDS),
-    std::make_shared<LedStackPattern>(NUM_LEDS)
+    std::make_shared<LedStackPattern>(NUM_LEDS),
+    std::make_shared<ColorBloomPattern>(NUM_LEDS)
 };
 
-int currentLedPattern = 3;
+size_t currentLedPattern = 3;
 
 // Static handler functions 
 void decreaseBrightness()
@@ -105,15 +107,26 @@ void toggleLightShow()
     }
 }
 
+void cyclePatterns()
+{
+    ledPatterns[currentLedPattern]->Stop();
+    currentLedPattern++;
+    if(currentLedPattern >= ledPatterns.size())
+    {
+        currentLedPattern = 0;
+    }
+    ledPatterns[currentLedPattern]->Start();
+}
+
 void setup() {
     highPowerLed.Initialize();
 
     touchButton.Initialize();
     touchButton.RegisterSingleTapHandler(toggleHighPowerLed);
     touchButton.RegisterDoubleTapHandler(toggleLightShow);
+    touchButton.RegisterTripleTapHandler(cyclePatterns);
     touchButton.RegisterHoldHandler(decreaseBrightness);
     touchButton.RegisterTapAndHoldHandler(increaseBrightness);
-
     LedStrip1.begin();
     LedStrip2.begin();
 
@@ -127,5 +140,5 @@ void setup() {
 }
 
 void loop() {
-
+    touchButton.Update();
 }

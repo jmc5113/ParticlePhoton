@@ -18,4 +18,9 @@
 // {0xFF, 0xFF, 0xFF}, // White
 // {0x00, 0x00, 0x00}, // Dark
 
-void randomColor(uint8_t* color);
+void randomColor(uint8_t* color)
+{
+    color[0] = random(256);
+    color[1] = random(256);
+    color[2] = random(256);   
+}

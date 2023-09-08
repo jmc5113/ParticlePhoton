@@ -6,9 +6,9 @@ class TouchButton
 {
 private:
     int mTouchPin;
+    int mNumTaps;
     bool mTouchHold;
-    bool mTouchTap;
-    bool mTouchDoubleTap;
+    bool mInterruptTriggered;
     Timer mTouchHoldTimer;
     Timer mTouchTimeoutTimer;
 
@@ -21,6 +21,8 @@ private:
 public:
     TouchButton(int sensorPin);
     void Initialize();
+    void Update();
+    void InterruptTriggered();
 
     void RegisterSingleTapHandler(TouchButtonHandler handler);
     void RegisterDoubleTapHandler(TouchButtonHandler handler);
