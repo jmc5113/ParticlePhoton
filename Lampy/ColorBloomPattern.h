@@ -9,21 +9,16 @@
 
 class ColorBloomPattern : public LedPattern
 {
+private:
     int mRandomPosition;
     int mDirPlus;
     int mDirMinus;
 
-    int mNumLeds;
-    std::vector<LedColor> mLedStrip1;
-    std::vector<LedColor> mLedStrip2;
+    void SetLedAt(unsigned int index);
 
-    public: 
-    ColorBloomPattern(int numLeds);
+public: 
+    ColorBloomPattern(int numLeds, Timer &timer);
 
-    void UpdateLeds();
+    void Update() override;
 
-    void SetLedAt(int index);
-
-    uint32_t GetLedColor_Strip1(unsigned int led) override;
-    uint32_t GetLedColor_Strip2(unsigned int led) override;
 };

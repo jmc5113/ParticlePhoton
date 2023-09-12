@@ -12,16 +12,8 @@ class ColorWaveAsymetricPattern : public LedPattern
     int mColorCounter = 0;
     uint32_t mIterationCounter = 0;
 
-    int mNumLeds;
-    std::vector<LedColor> mLedStrip1;
-    std::vector<LedColor> mLedStrip2;
-
-
     public: 
-    ColorWaveAsymetricPattern(int numLeds);
+    ColorWaveAsymetricPattern(int numLeds, Timer &timer);
 
-    void UpdateLeds();
-
-    uint32_t GetLedColor_Strip1(unsigned int led) override;
-    uint32_t GetLedColor_Strip2(unsigned int led) override;
+    void Update() override;
 };

@@ -33,14 +33,11 @@ using namespace std;
 //     {0x00, 0x00, 0x00}  // Dark
 // };
 
-ColorBloomPattern::ColorBloomPattern(int numLeds) :
-    LedPattern(175, &ColorBloomPattern::UpdateLeds, *this),
+ColorBloomPattern::ColorBloomPattern(int numLeds, Timer &timer) :
+    LedPattern(timer, 175, numLeds),
     mRandomPosition(0),
     mDirPlus(0),
-    mDirMinus(0),
-    mNumLeds(numLeds),
-    mLedStrip1(vector<LedColor>(numLeds)),
-    mLedStrip2(vector<LedColor>(numLeds))
+    mDirMinus(0)
 {
     mRandomPosition = random(mNumLeds * 2);
     mDirPlus = mRandomPosition;
@@ -48,23 +45,7 @@ ColorBloomPattern::ColorBloomPattern(int numLeds) :
     randomColor(s_bloomColor);
 }
 
-uint32_t ColorBloomPattern::GetLedColor_Strip1(unsigned int led)
-{
-    if(led < mLedStrip1.size())
-        return mLedStrip1[led].UpdateLed();
-    else
-        return 0;
-}
-
-uint32_t ColorBloomPattern::GetLedColor_Strip2(unsigned int led)
-{
-    if(led < mLedStrip2.size())
-        return mLedStrip2[led].UpdateLed();
-    else
-        return 0;
-}
-
-void ColorBloomPattern::SetLedAt(int index)
+void ColorBloomPattern::SetLedAt(unsigned int index)
 {
     if(index < mNumLeds)
     {
@@ -76,7 +57,7 @@ void ColorBloomPattern::SetLedAt(int index)
     } 
 }
 
-void ColorBloomPattern::UpdateLeds()
+void ColorBloomPattern::Update()
 {
     if(mRandomPosition == mDirPlus && mRandomPosition == mDirMinus)
     {

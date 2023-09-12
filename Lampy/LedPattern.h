@@ -1,24 +1,35 @@
 #pragma once
 
 #include <stdint.h>
+#include <vector>
+
 #include "application.h"
 
-class LedPattern {
-    protected:
-    Timer mTimer;
+#include "LedColor.h"
 
-    public:
-    template <typename T>
-    LedPattern(unsigned int updateDelay, void (T::*handler)(), T& instance) : 
-        mTimer(updateDelay, handler, instance)
+class LedPattern {
+protected:
+    unsigned int mUpdateDelay;
+    Timer &mTimer;
+    unsigned int mNumLeds;
+    unsigned int mTotalLeds;
+    std::vector<LedColor> mLedStrip1;
+    std::vector<LedColor> mLedStrip2;
+
+public:
+    // template <typename T>
+    LedPattern(Timer &timer, unsigned int updateDelay, int numLeds) : //void (T::*handler)(), T& instance) :
+        mUpdateDelay(updateDelay),
+        mTimer(timer),
+        mNumLeds(numLeds),
+        mTotalLeds(numLeds * 2),
+        // mHandler(handler),
+        mLedStrip1(std::vector<LedColor>(numLeds)),
+        mLedStrip2(std::vector<LedColor>(numLeds))
     {}
 
-    ~LedPattern()
-    {
-        mTimer.dispose();
-    }
-
     void Start(){
+        mTimer.changePeriod(mUpdateDelay);
         mTimer.start();
     }
 
@@ -27,6 +38,7 @@ class LedPattern {
     }
 
     void StartFromISR(){
+        mTimer.changePeriodFromISR(mUpdateDelay);
         mTimer.startFromISR();
     }
 
@@ -34,6 +46,21 @@ class LedPattern {
         mTimer.stopFromISR();
     }
 
-    virtual uint32_t GetLedColor_Strip1(unsigned int led) = 0;
-    virtual uint32_t GetLedColor_Strip2(unsigned int led) = 0;
+    uint32_t GetLedColor_Strip1(unsigned int led)
+    {
+        if(led < mLedStrip1.size())
+            return mLedStrip1[led].UpdateLed();
+        else
+            return 0;
+    }
+
+    uint32_t GetLedColor_Strip2(unsigned int led)
+    {
+        if(led < mLedStrip2.size())
+            return mLedStrip2[led].UpdateLed();
+        else
+            return 0;
+    }
+
+    virtual void Update() = 0;
 };

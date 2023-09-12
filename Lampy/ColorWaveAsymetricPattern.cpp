@@ -24,30 +24,11 @@ uint8_t waveColorsRight[NUM_COLORSA][3] =
 };
 
 
-ColorWaveAsymetricPattern::ColorWaveAsymetricPattern(int numLeds) : 
-    LedPattern(125, &ColorWaveAsymetricPattern::UpdateLeds, *this),
-    mNumLeds(numLeds),
-    mLedStrip1(vector<LedColor>(numLeds)),
-    mLedStrip2(vector<LedColor>(numLeds))
+ColorWaveAsymetricPattern::ColorWaveAsymetricPattern(int numLeds, Timer &timer) : 
+    LedPattern(timer, 125, numLeds)
 {}
 
-uint32_t ColorWaveAsymetricPattern::GetLedColor_Strip1(unsigned int led)
-{
-    if(led < mLedStrip1.size())
-        return mLedStrip1[led].UpdateLed();
-    else
-        return 0;
-}
-
-uint32_t ColorWaveAsymetricPattern::GetLedColor_Strip2(unsigned int led)
-{
-    if(led < mLedStrip2.size())
-        return mLedStrip2[led].UpdateLed();
-    else
-        return 0;
-}
-
-void ColorWaveAsymetricPattern::UpdateLeds()
+void ColorWaveAsymetricPattern::Update()
 {
     int n = mIterationCounter % mNumLeds;
     if(n == 0)

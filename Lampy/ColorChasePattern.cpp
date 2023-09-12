@@ -6,31 +6,11 @@
 
 using namespace std;
 
-ColorChasePattern::ColorChasePattern(int numLeds) : 
-    LedPattern(50, &ColorChasePattern::UpdateLeds, *this),
-    mNumLeds(numLeds),
-    mLedStrip1(vector<LedColor>(numLeds)),
-    mLedStrip2(vector<LedColor>(numLeds))
+ColorChasePattern::ColorChasePattern(int numLeds, Timer &timer) : 
+    LedPattern(timer, 50, numLeds)
 {}
 
-uint32_t ColorChasePattern::GetLedColor_Strip1(unsigned int led)
-{
-    if(led < mLedStrip1.size())
-        return mLedStrip1[led].UpdateLed();
-    else
-        return 0;
-}
-
-uint32_t ColorChasePattern::GetLedColor_Strip2(unsigned int led)
-{
-    if(led < mLedStrip2.size())
-        return mLedStrip2[led].UpdateLed();
-    else
-        return 0;
-}
-
-// Timer colorChaseTimer(mUpdateDelay, ColorChasePattern::UpdateLeds);
-void ColorChasePattern::UpdateLeds()
+void ColorChasePattern::Update()
 {
     int currentTime = millis();
     if(currentTime - mSpeedChangeTime > 500)

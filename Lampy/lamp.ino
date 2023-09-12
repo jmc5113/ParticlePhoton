@@ -12,6 +12,7 @@
 #include "ColorChasePattern.h"
 #include "LedStackPattern.h"
 #include "ColorBloomPattern.h"
+#include "FireworksPattern.h"
 
 #define NUM_LEDS 16
 
@@ -28,15 +29,19 @@ HighPowerLed highPowerLed = HighPowerLed(highPowerLedEnPin);
 int touchSensorPin = D4;
 TouchButton touchButton = TouchButton(touchSensorPin);
 
-std::vector<std::shared_ptr<LedPattern>> ledPatterns = {
-    std::make_shared<ColorChasePattern>(NUM_LEDS),
-    std::make_shared<ColorWaveSymetricPattern>(NUM_LEDS),
-    std::make_shared<ColorWaveAsymetricPattern>(NUM_LEDS),
-    std::make_shared<LedStackPattern>(NUM_LEDS),
-    std::make_shared<ColorBloomPattern>(NUM_LEDS)
-};
 
-size_t currentLedPattern = 3;
+Timer PatternUpdateTimer(1000, patternUpdate);
+
+std::vector<std::shared_ptr<LedPattern>> ledPatterns = {
+    std::make_shared<ColorBloomPattern>(NUM_LEDS, PatternUpdateTimer),
+    std::make_shared<FireworksPattern>(NUM_LEDS, PatternUpdateTimer),
+    std::make_shared<ColorChasePattern>(NUM_LEDS, PatternUpdateTimer),
+    std::make_shared<ColorWaveSymetricPattern>(NUM_LEDS, PatternUpdateTimer),
+    std::make_shared<ColorWaveAsymetricPattern>(NUM_LEDS, PatternUpdateTimer),
+    std::make_shared<LedStackPattern>(NUM_LEDS, PatternUpdateTimer)
+};
+int vector_size = 0;
+int currentLedPattern = 0;
 
 // Static handler functions 
 void decreaseBrightness()
@@ -52,6 +57,12 @@ void increaseBrightness()
 void toggleHighPowerLed()
 {
     highPowerLed.toggleHighPowerLed();
+}
+
+void patternUpdate()
+{
+    // Log.info("Call patternUpdate");
+    ledPatterns[currentLedPattern]->Update();
 }
 
 // Update the LEDs - executed rapidly for LEDs to make smooth color transitions
@@ -111,10 +122,12 @@ void cyclePatterns()
 {
     ledPatterns[currentLedPattern]->Stop();
     currentLedPattern++;
+
     if(currentLedPattern >= ledPatterns.size())
     {
         currentLedPattern = 0;
     }
+
     ledPatterns[currentLedPattern]->Start();
 }
 
@@ -130,13 +143,13 @@ void setup() {
     LedStrip1.begin();
     LedStrip2.begin();
 
-    // initializeColorChase(g_LedColors1, g_LedColors2);
-    // initializeLedStack(NUM_LEDS, g_LedColors1, g_LedColors2);
-    // initializeColorWaveSymetric(NUM_LEDS, g_LedColors1, g_LedColors2);
-    // initializeColorWaveAsymetric(NUM_LEDS, g_LedColors1, g_LedColors2);
-
     ledPatterns[currentLedPattern]->Start();
     ledUpdateTimer.start();
+    
+    // Particle.variable("Vector_Size", vector_size);
+    // Particle.variable("CurrentPattern", currentLedPattern);
+
+    // Log.info("Finish Setup");
 }
 
 void loop() {

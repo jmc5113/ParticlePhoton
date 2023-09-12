@@ -20,22 +20,22 @@ static uint8_t redWhite[COLORS_8][3] =
     
 };
 
-#define COLORS_12 12
-static uint8_t redGreenBlueOrange[COLORS_12][3] =
-{
-    {0xFF, 0x00, 0x00}, // Red
-    {0xFF, 0x00, 0x00}, // Red
-    {0xFF, 0x00, 0x00}, // Red
-    {0x00, 0xFF, 0x00}, // Green
-    {0x00, 0xFF, 0x00}, // Green
-    {0x00, 0xFF, 0x00}, // Green
-    {0xFF, 0x7F, 0x00}, // Orange
-    {0xFF, 0x7F, 0x00}, // Orange
-    {0xFF, 0x7F, 0x00}, // Orange
-    {0x00, 0x00, 0xFF}, // Blue
-    {0x00, 0x00, 0xFF}, // Blue
-    {0x00, 0x00, 0xFF}, // Blue
-};
+// #define COLORS_12 12
+// static uint8_t redGreenBlueOrange[COLORS_12][3] =
+// {
+//     {0xFF, 0x00, 0x00}, // Red
+//     {0xFF, 0x00, 0x00}, // Red
+//     {0xFF, 0x00, 0x00}, // Red
+//     {0x00, 0xFF, 0x00}, // Green
+//     {0x00, 0xFF, 0x00}, // Green
+//     {0x00, 0xFF, 0x00}, // Green
+//     {0xFF, 0x7F, 0x00}, // Orange
+//     {0xFF, 0x7F, 0x00}, // Orange
+//     {0xFF, 0x7F, 0x00}, // Orange
+//     {0x00, 0x00, 0xFF}, // Blue
+//     {0x00, 0x00, 0xFF}, // Blue
+//     {0x00, 0x00, 0xFF}, // Blue
+// };
 
 class ColorChasePattern : public LedPattern
 {
@@ -47,15 +47,8 @@ class ColorChasePattern : public LedPattern
     int mNumColors = COLORS_8;
     uint32_t mIterationCounter = 0;
 
-    int mNumLeds;
-    std::vector<LedColor> mLedStrip1;
-    std::vector<LedColor> mLedStrip2;
-
     public: 
-    ColorChasePattern(int numLeds);
+    ColorChasePattern(int numLeds, Timer &timer);
 
-    void UpdateLeds();
-
-    uint32_t GetLedColor_Strip1(unsigned int led) override;
-    uint32_t GetLedColor_Strip2(unsigned int led) override;
+    void Update() override;
 };

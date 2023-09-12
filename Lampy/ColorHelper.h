@@ -1,3 +1,5 @@
+#pragma once
+
 #include "stdint.h"
 #include "application.h"
 
@@ -17,5 +19,18 @@
 // {0xFF, 0x00, 0x7F}, // Pink
 // {0xFF, 0xFF, 0xFF}, // White
 // {0x00, 0x00, 0x00}, // Dark
+
+extern uint8_t g_colorBlack[3];
+extern uint8_t g_colorRedOrange[3];
+extern uint8_t g_colorOrange[3];
+extern uint8_t g_colorYellow[3];
+extern uint8_t g_colorGreen[3];
+extern uint8_t g_colorLightBlue[3];
+extern uint8_t g_colorMediumBlue[3];
+extern uint8_t g_colorPurple[3];
+extern uint8_t g_colorLightPink[3];
+extern uint8_t g_colorPink[3];
+extern uint8_t g_colorWhite[3];
+
 
 void randomColor(uint8_t* color);

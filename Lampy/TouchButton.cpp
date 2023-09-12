@@ -19,13 +19,11 @@ static void TouchTimeoutExp()
 }
 
 TouchButton::TouchButton(int sensorPin) :
-    mTouchHoldTimer(300, TouchHoldTimerExp), 
-    mTouchTimeoutTimer(500, TouchTimeoutExp),
-    mTouchHold(false),
     mNumTaps(0),
-    // mTouchTap(false),
-    // mTouchDoubleTap(false),
-    mInterruptTriggered(false)
+    mTouchHold(false),
+    mInterruptTriggered(false),
+    mTouchHoldTimer(300, TouchHoldTimerExp), 
+    mTouchTimeoutTimer(500, TouchTimeoutExp)
 {
     mTouchPin = sensorPin;
 }
@@ -114,14 +112,12 @@ void TouchButton::TouchTimeout()
 
     mTouchHold = false;
     mNumTaps = 0;
-    // mTouchTap = false;
-    // mTouchDoubleTap = false;
 }
 
 void TouchButton::TouchPinChange()
 {
     int value = digitalRead(mTouchPin);
-    delay(50);
+    delay(100);
     int value2 = digitalRead(mTouchPin);
 
     // if interrupt pulse is too short, do nothing.
@@ -146,16 +142,7 @@ void TouchButton::TouchPinChange()
         {
             mTouchHold = false;
             mNumTaps = 0;
-            // mTouchTap = false;
-            // mTouchDoubleTap = false;
         }
-        // else if(mTouchTap)
-        // {
-        //     // this is a double tap. Toggle the light show.
-        //     mTouchTap = false;
-        //     mTouchDoubleTap = true;
-        //     mTouchTimeoutTimer.reset();
-        // } 
         else
         {
             // this is a single tap, start the mTouchTimeoutTimer to see if another touch is coming.

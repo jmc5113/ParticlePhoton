@@ -9,20 +9,16 @@
 
 class LedStackPattern : public LedPattern
 {
+private:
     int mStackCount;
     int mLeadingPos;
     int mTrailingPos;
     int mResetPos;
+    int mCurrentColorIndex;
 
-    int mNumLeds;
-    std::vector<LedColor> mLedStrip1;
-    std::vector<LedColor> mLedStrip2;
+    void UpdateColor(); 
 
-    public: 
-    LedStackPattern(int numLeds);
-
-    void UpdateLeds();
-
-    uint32_t GetLedColor_Strip1(unsigned int led) override;
-    uint32_t GetLedColor_Strip2(unsigned int led) override;
+public: 
+    LedStackPattern(int numLeds, Timer &timer);
+    void Update() override;
 };

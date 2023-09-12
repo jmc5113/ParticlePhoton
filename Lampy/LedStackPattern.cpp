@@ -5,19 +5,10 @@
 #include "ColorHelper.h"
 
 static int s_ledStackChangeTime = 250;
-// static int mStackCount = 0;
-// static int mLeadingPos = mNumLeds - 1;
-// static int mTrailingPos = mNumLeds - 1;
-// static int mResetPos = mNumLeds - 1;
 static uint8_t s_ledStackBaseColor[3] = {0x00, 0x00, 0x00};
 static uint8_t s_ledStackColor[3] = {0x00, 0xFF, 0x00};
 
 static bool s_randomizeStackColor = false;
-static bool s_randomizeRunColor = false;
-
-// There may be an issue with the LED pointers as one led from the mLedStrip1 is lit green, while mLedStrip2 works normal.
-
-using namespace std;
 
 #define NUM_COLORS 10
 static uint8_t s_waveColors[NUM_COLORS][3] = 
@@ -34,34 +25,31 @@ static uint8_t s_waveColors[NUM_COLORS][3] =
     {0x00, 0x00, 0x00}  // Dark
 };
 
-LedStackPattern::LedStackPattern(int numLeds) :
+LedStackPattern::LedStackPattern(int numLeds, Timer &timer) :
+    LedPattern(timer, 175, numLeds),
     mStackCount(0),
     mLeadingPos(numLeds - 1),
     mTrailingPos(numLeds - 1),
     mResetPos(numLeds - 1),
-    LedPattern(175, &LedStackPattern::UpdateLeds, *this),
-    mNumLeds(numLeds),
-    mLedStrip1(vector<LedColor>(numLeds)),
-    mLedStrip2(vector<LedColor>(numLeds))
+    mCurrentColorIndex(0)
 {}
 
-uint32_t LedStackPattern::GetLedColor_Strip1(unsigned int led)
+void LedStackPattern::UpdateColor()
 {
-    if(led < mLedStrip1.size())
-        return mLedStrip1[led].UpdateLed();
+    if(s_randomizeStackColor) 
+    {
+        randomColor(s_ledStackColor);
+    }
     else
-        return 0;
+    {
+        mCurrentColorIndex = (mCurrentColorIndex + 1) % NUM_COLORS;
+        s_ledStackColor[0] = s_waveColors[mCurrentColorIndex][0];
+        s_ledStackColor[1] = s_waveColors[mCurrentColorIndex][1];
+        s_ledStackColor[2] = s_waveColors[mCurrentColorIndex][2];
+    }
 }
 
-uint32_t LedStackPattern::GetLedColor_Strip2(unsigned int led)
-{
-    if(led < mLedStrip2.size())
-        return mLedStrip2[led].UpdateLed();
-    else
-        return 0;
-}
-
-void LedStackPattern::UpdateLeds()
+void LedStackPattern::Update()
 {
     if(mLeadingPos == mStackCount)
     {
@@ -74,10 +62,7 @@ void LedStackPattern::UpdateLeds()
         {
             mResetPos = mNumLeds - 1;
             mStackCount = 0;
-            if(s_randomizeStackColor) 
-            {
-                randomColor(s_ledStackColor);
-            }
+            UpdateColor();
         }
         return;
     }
@@ -112,10 +97,7 @@ void LedStackPattern::UpdateLeds()
         
         mStackCount++;
 
-        if(s_randomizeRunColor)
-        {
-            randomColor(s_ledStackColor);
-        }
+        UpdateColor();
 
         if(mStackCount == mNumLeds)
         {

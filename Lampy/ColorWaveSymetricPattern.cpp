@@ -20,30 +20,11 @@ static uint8_t s_waveColors[NUM_COLORS][3] =
     {0x00, 0x00, 0x00}  // Dark
 };
 
-ColorWaveSymetricPattern::ColorWaveSymetricPattern(int numLeds) : 
-    LedPattern(125, &ColorWaveSymetricPattern::UpdateLeds, *this),
-    mNumLeds(numLeds),
-    mLedStrip1(vector<LedColor>(numLeds)),
-    mLedStrip2(vector<LedColor>(numLeds))
+ColorWaveSymetricPattern::ColorWaveSymetricPattern(int numLeds, Timer &timer) : 
+    LedPattern(timer, 125, numLeds)
 {}
 
-uint32_t ColorWaveSymetricPattern::GetLedColor_Strip1(unsigned int led)
-{
-    if(led < mLedStrip1.size())
-        return mLedStrip1[led].UpdateLed();
-    else
-        return 0;
-}
-
-uint32_t ColorWaveSymetricPattern::GetLedColor_Strip2(unsigned int led)
-{
-    if(led < mLedStrip2.size())
-        return mLedStrip2[led].UpdateLed();
-    else
-        return 0;
-}
-
-void ColorWaveSymetricPattern::UpdateLeds()
+void ColorWaveSymetricPattern::Update()
 {
     int n = mIterationCounter % mNumLeds;
     if(n == 0)
