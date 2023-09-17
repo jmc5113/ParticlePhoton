@@ -9,7 +9,7 @@ static int s_ledStackChangeTime = 250;
 // static int mLeadingPos = mNumLeds - 1;
 // static int mTrailingPos = mNumLeds - 1;
 // static int mResetPos = mNumLeds - 1;
-// static uint8_t s_ledStackBaseColor[3] = {0x00, 0x00, 0x00};
+static uint8_t s_baseColor[3] = {0x00, 0x00, 0x00};
 static uint8_t s_bloomColor[3] = {0x00, 0xFF, 0x00};
 
 static bool s_randomizeColor = true;
@@ -79,13 +79,19 @@ void ColorBloomPattern::Update()
         mDirMinus--;
     }
 
-    if(mDirMinus <= 0 && mDirPlus >= mNumLeds * 2)
+    if(mDirMinus < 0 && mDirPlus >= mNumLeds * 2)
     {
         mRandomPosition = random(mNumLeds * 2);
         mDirPlus = mRandomPosition;
         mDirMinus = mRandomPosition;
 
-        if(s_randomizeColor)
+        if(random(10) == 1)
+        {
+            s_bloomColor[0] = s_baseColor[0];
+            s_bloomColor[1] = s_baseColor[1];
+            s_bloomColor[2] = s_baseColor[2];
+        }
+        else if(s_randomizeColor)
         {
             randomColor(s_bloomColor);
         }
